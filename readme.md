@@ -1,7 +1,22 @@
 # FoundationStereo: Zero-Shot Stereo Matching
 
-This is the official implementation of our paper accepted by CVPR 2025 Oral (**All strong accept**)
+This is a forked version (commit `8342dc8`) of the official implementation of the FoundationStereo paper accepted at CVPR 2025 Oral (**All strong accept**).
 
+### Changelog:
+* core/submodule.py: file changed to approximate flash-attention with full-attention for GPU compatibility.
+  - line 19: commented
+  - line 224: replaced with `attn_output = F.scaled_dot_product_attention(Q, K, V, dropout=0,padding=0, attn_mask=None, is_causal=False)`
+
+* scripts/run_demo.py: file changed to run inference for numpy image arrays instead of a single left and right image pair, and save the results to specified location with specified naming. 
+  
+
+
+The following content is unchanged from readme.md file in the original code.
+
+------------------------------------------------------------------
+
+
+[[Original Code]](https://github.com/NVlabs/FoundationStereo/tree/master)
 [[Website]](https://nvlabs.github.io/FoundationStereo/) [[Paper]](https://arxiv.org/abs/2501.09898) [[Video]](https://www.youtube.com/watch?v=R7RgHxEXB3o)
 
 Authors: Bowen Wen, Matthew Trepte, Joseph Aribido, Jan Kautz, Orazio Gallo, Stan Birchfield
