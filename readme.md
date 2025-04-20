@@ -5,7 +5,7 @@ This is a forked version (commit `8342dc8`) of the official implementation of th
 ### Changelog:
 * core/submodule.py: file changed to approximate flash-attention with full-attention for GPU compatibility.
   - line 19: commented
-  - line 224: replaced with `attn_output = F.scaled_dot_product_attention(Q, K, V, dropout=0,padding=0, attn_mask=None, is_causal=False)`
+  - line 224: replaced with `attn_output = F.scaled_dot_product_attention(Q, K, V, dropout=0, attn_mask=None, is_causal=False)`
 
 * scripts/run_demo.py: file changed to run inference for numpy image arrays instead of a single left and right image pair, and save the results to specified location with specified naming. 
   
