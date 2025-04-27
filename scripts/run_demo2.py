@@ -23,6 +23,7 @@ if __name__=="__main__":
   parser.add_argument('--right_file', default=f'{code_dir}/../assets/right.png', type=str)
   parser.add_argument('--left_npy_file', default="", type=str)
   parser.add_argument('--right_npy_file', default="", type=str)
+  parser.add_argument('--stereo_params_npy_file', default = "", type = str)
   parser.add_argument('--intrinsic_file', default=f'{code_dir}/../assets/K.txt', type=str, help='camera intrinsic matrix and baseline file')
   parser.add_argument('--ckpt_dir', default=f'{code_dir}/../pretrained_models/23-51-11/model_best_bp2.pth', type=str, help='pretrained model path')
   parser.add_argument('--out_dir', default=f'{code_dir}/../output/', type=str, help='the directory to save results')
@@ -30,7 +31,8 @@ if __name__=="__main__":
   parser.add_argument('--hiera', default=0, type=int, help='hierarchical inference (only needed for high-resolution images (>1K))')
   parser.add_argument('--z_far', default=10, type=float, help='max depth to clip in point cloud')
   parser.add_argument('--valid_iters', type=int, default=32, help='number of flow-field updates during forward pass')
-  parser.add_argument('--get_pc', type=int, default=0, help='save point cloud output')
+  parser.add_argument('--get_depth', type=int, default=1, help='save depth map output as numpy array in meters')
+  parser.add_argument('--get_pc', type=int, default=0, help='save point cloud output')  
   parser.add_argument('--remove_invisible', default=1, type=int, help='remove non-overlapping observations between left and right images from point cloud, so the remaining points are more reliable')
   parser.add_argument('--denoise_cloud', type=int, default=1, help='whether to denoise the point cloud')
   parser.add_argument('--denoise_nb_points', type=int, default=30, help='number of points to consider for radius outlier removal')
@@ -109,6 +111,17 @@ if __name__=="__main__":
   #   us_right = xx-disp
   #   invalid = us_right<0
   #   disp[invalid] = np.inf
+
+  if args.get_depth:
+    with open(args.stereo_params_npy_file, 'r') as f:
+      stereo_params = np.load(f)
+    
+    P1 = stereo_params['P1']
+    P1[:2] *= scale
+    f_left = P1[0,0]
+    baseline = stereo_params['baseline']
+    depth = f_left*baseline/(disp+1e-6)
+    np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
 
   if args.get_pc:
     with open(args.intrinsic_file, 'r') as f:

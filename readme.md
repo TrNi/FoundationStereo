@@ -8,6 +8,8 @@ This is a forked version (commit `8342dc8`) of the official implementation of th
   - line 224: replaced with `attn_output = F.scaled_dot_product_attention(Q, K, V, dropout=0, attn_mask=None, is_causal=False)`
 
 * scripts/run_demo2.py: file added to run inference for numpy image arrays instead of a single left and right image pair, and save the results to specified location with specified naming. 
+
+* scripts/run_demo2.py: file modified to compute depth map using calibrated stereo system parameters. 
   
 
 
