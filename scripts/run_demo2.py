@@ -113,24 +113,24 @@ if __name__=="__main__":
   #   disp[invalid] = np.inf
 
   if args.get_depth:
-    with open(args.stereo_params_npy_file, 'r') as f:
-      stereo_params = np.load(f)
+    
+    stereo_params = np.load(args.stereo_params_npy_file, allow_pickle = True)
     
     P1 = stereo_params['P1']
-    P1[:2] *= scale
+    P1[:2] *= args.scale
     f_left = P1[0,0]
     baseline = stereo_params['baseline']
     depth = f_left*baseline/(disp+1e-6)
-    np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
+    np.save(f'{args.out_dir}/leftview_depth_meter.npz', depth.cpu().numpy())
 
   if args.get_pc:
     with open(args.intrinsic_file, 'r') as f:
       lines = f.readlines()
       K = np.array(list(map(float, lines[0].rstrip().split()))).astype(np.float32).reshape(3,3)
       baseline = float(lines[1])
-    K[:2] *= scale
+    K[:2] *= args.scale
     depth = K[0,0]*baseline/disp
-    np.save(f'{args.out_dir}/depth_meter.npy', depth)
+    np.save(f'{args.out_dir}/depth_meter.npy', depth.cpu().numpy())
     xyz_map = depth2xyzmap(depth, K)
     pcd = toOpen3dCloud(xyz_map.reshape(-1,3), img0_ori.reshape(-1,3))
     keep_mask = (np.asarray(pcd.points)[:,2]>0) & (np.asarray(pcd.points)[:,2]<=args.z_far)
