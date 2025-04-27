@@ -5,3 +5,4 @@ weight/
 __pycache__
 DATA/*
 **/desktop.ini
+refs/desktop.ini
