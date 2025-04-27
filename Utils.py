@@ -132,7 +132,34 @@ def vis_disparity(disp, min_val=None, max_val=None, invalid_thres=np.inf, color_
     vis[invalid_mask] = 0
   return vis.astype(np.uint8)
 
-
+def vis_disparityarr(disparr, min_val=None, max_val=None, invalid_thres=np.inf, color_map=cv2.COLORMAP_TURBO, cmap=None, other_output={}):
+  """
+  @disparr: np array (N,H,W)
+  @invalid_thres: > thres is invalid
+  """  
+  disparr = disparr.copy()
+  N,H,W = disparr.shape
+  for i in range(N):
+    disp = disparr[i,:,:]
+    invalid_mask = disp>=invalid_thres
+    if (invalid_mask==0).sum()==0:
+      other_output['min_val'] = None
+      other_output['max_val'] = None
+      return np.zeros((H,W,3))
+    if min_val is None:
+      min_val = disp[invalid_mask==0].min()
+    if max_val is None:
+      max_val = disp[invalid_mask==0].max()
+    other_output['min_val'] = min_val
+    other_output['max_val'] = max_val
+    vis = ((disp-min_val)/(max_val-min_val)).clip(0,1) * 255
+    if cmap is None:
+      vis = cv2.applyColorMap(vis.clip(0, 255).astype(np.uint8), color_map)[...,::-1]
+    else:
+      vis = cmap(vis.astype(np.uint8))[...,:3]*255
+    if invalid_mask.any():
+      vis[invalid_mask] = 0
+  return vis.astype(np.uint8)
 
 def depth_uint8_decoding(depth_uint8, scale=1000):
   depth_uint8 = depth_uint8.astype(float)

@@ -30,7 +30,7 @@ if __name__=="__main__":
   parser.add_argument('--hiera', default=0, type=int, help='hierarchical inference (only needed for high-resolution images (>1K))')
   parser.add_argument('--z_far', default=10, type=float, help='max depth to clip in point cloud')
   parser.add_argument('--valid_iters', type=int, default=32, help='number of flow-field updates during forward pass')
-  parser.add_argument('--get_pc', type=int, default=1, help='save point cloud output')
+  parser.add_argument('--get_pc', type=int, default=0, help='save point cloud output')
   parser.add_argument('--remove_invisible', default=1, type=int, help='remove non-overlapping observations between left and right images from point cloud, so the remaining points are more reliable')
   parser.add_argument('--denoise_cloud', type=int, default=1, help='whether to denoise the point cloud')
   parser.add_argument('--denoise_nb_points', type=int, default=30, help='number of points to consider for radius outlier removal')
@@ -62,22 +62,22 @@ if __name__=="__main__":
   model.eval()
 
   code_dir = os.path.dirname(os.path.realpath(__file__))
-  img0 = imageio.imread(args.left_file)
-  img1 = imageio.imread(args.right_file)
-  scale = args.scale
-  assert scale<=1, "scale must be <=1"
-  img0 = cv2.resize(img0, fx=scale, fy=scale, dsize=None)
-  img1 = cv2.resize(img1, fx=scale, fy=scale, dsize=None)
-  H,W = img0.shape[:2]
-  img0_ori = img0.copy()
-  logging.info(f"img0: {img0.shape}")
-  img0 = torch.as_tensor(img0).cuda().float()[None].permute(0,3,1,2)
-  img1 = torch.as_tensor(img1).cuda().float()[None].permute(0,3,1,2)
+  # img0 = imageio.imread(args.left_file)
+  # img1 = imageio.imread(args.right_file)
+  # scale = args.scale
+  # assert scale<=1, "scale must be <=1"
+  # img0 = cv2.resize(img0, fx=scale, fy=scale, dsize=None)
+  # img1 = cv2.resize(img1, fx=scale, fy=scale, dsize=None)
+  # H,W = img0.shape[:2]
+  # img0_ori = img0.copy()
+  # logging.info(f"img0: {img0.shape}")
+  # img0 = torch.as_tensor(img0).cuda().float()[None].permute(0,3,1,2)
+  # img1 = torch.as_tensor(img1).cuda().float()[None].permute(0,3,1,2)
 
   if args.left_npy_file and args.right_npy_file:
     img0 = np.load(args.left_npy_file)
     img1 = np.load(args.right_npy_file)
-    H,W = img0.shape[:2]
+    _,H,W,_ = img0.shape
     img0_ori = img0.copy()
     logging.info(f"img0: {img0.shape}")  
     img0 = torch.as_tensor(img0).cuda().float().permute(0,3,1,2)
@@ -91,18 +91,24 @@ if __name__=="__main__":
       disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
     else:
       disp = model.run_hierachical(img0, img1, iters=args.valid_iters, test_mode=True, small_ratio=0.5)
+  
+  print(disp.shape)
+
   disp = padder.unpad(disp.float())
-  disp = disp.data.cpu().numpy().reshape(H,W)
-  vis = vis_disparity(disp)
-  vis = np.concatenate([img0_ori, vis], axis=1)
+  print(disp.shape)
+
+  print("\n")
+  disparr = disp.data.cpu().numpy().reshape(disp.shape[0],H,W)
+  vis = vis_disparityarr(disparr)
+  # vis = np.concatenate([img0_ori, vis], axis=1)
   imageio.imwrite(f'{args.out_dir}/vis.png', vis)
   logging.info(f"Output saved to {args.out_dir}")
 
-  if args.remove_invisible:
-    yy,xx = np.meshgrid(np.arange(disp.shape[0]), np.arange(disp.shape[1]), indexing='ij')
-    us_right = xx-disp
-    invalid = us_right<0
-    disp[invalid] = np.inf
+  # if args.remove_invisible:
+  #   yy,xx = np.meshgrid(np.arange(disp.shape[0]), np.arange(disp.shape[1]), indexing='ij')
+  #   us_right = xx-disp
+  #   invalid = us_right<0
+  #   disp[invalid] = np.inf
 
   if args.get_pc:
     with open(args.intrinsic_file, 'r') as f:
