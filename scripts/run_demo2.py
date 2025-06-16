@@ -19,16 +19,17 @@ from core.foundation_stereo import *
 if __name__=="__main__":
   code_dir = os.path.dirname(os.path.realpath(__file__))
   parser = argparse.ArgumentParser()
+  parser.add_argument('--batch_size', default=1 type=int)
   parser.add_argument('--left_file', default=f'{code_dir}/../assets/left.png', type=str)
   parser.add_argument('--right_file', default=f'{code_dir}/../assets/right.png', type=str)
-  parser.add_argument('--left_npy_file', default="", type=str)
-  parser.add_argument('--right_npy_file', default="", type=str)
-  parser.add_argument('--stereo_params_npy_file', default = "", type = str)
+  parser.add_argument('--left_h5_file', default="", type=str)
+  parser.add_argument('--right_h5_file', default="", type=str)
+  parser.add_argument('--stereo_params_npz_file', default = "", type = str)
   parser.add_argument('--intrinsic_file', default=f'{code_dir}/../assets/K.txt', type=str, help='camera intrinsic matrix and baseline file')
   parser.add_argument('--ckpt_dir', default=f'{code_dir}/../pretrained_models/23-51-11/model_best_bp2.pth', type=str, help='pretrained model path')
   parser.add_argument('--out_dir', default=f'{code_dir}/../output/', type=str, help='the directory to save results')
   parser.add_argument('--scale', default=1, type=float, help='downsize the image by scale, must be <=1')
-  parser.add_argument('--hiera', default=0, type=int, help='hierarchical inference (only needed for high-resolution images (>1K))')
+  parser.add_argument('--hiera', default=1, type=int, help='hierarchical inference (only needed for high-resolution images (>1K))')
   parser.add_argument('--z_far', default=10, type=float, help='max depth to clip in point cloud')
   parser.add_argument('--valid_iters', type=int, default=32, help='number of flow-field updates during forward pass')
   parser.add_argument('--get_depth', type=int, default=1, help='save depth map output as numpy array in meters')
@@ -53,6 +54,12 @@ if __name__=="__main__":
   args = OmegaConf.create(cfg)
   logging.info(f"args:\n{args}")
   logging.info(f"Using pretrained model from {ckpt_dir}")
+  stereo_params = np.load(args.stereo_params_npy_file, allow_pickle=True)
+        
+  P1 = stereo_params['P1']
+  P1[:2] *= scale
+  f_left = P1[0,0]
+  baseline = stereo_params['baseline']
 
   model = FoundationStereo(args)
 
@@ -76,53 +83,67 @@ if __name__=="__main__":
   # img0 = torch.as_tensor(img0).cuda().float()[None].permute(0,3,1,2)
   # img1 = torch.as_tensor(img1).cuda().float()[None].permute(0,3,1,2)
 
-  if args.left_npy_file and args.right_npy_file:
-    img0 = np.load(args.left_npy_file)
-    img1 = np.load(args.right_npy_file)
-    _,H,W,_ = img0.shape
+
+  if args.left_h5_file and args.right_h5_file:
+    with h5py.File(args.left_h5_file, 'r') as f:
+      left_loaded = f['left'][()]   # or np.array(f['left'])
+    with h5py.File(args.right_h5_file, 'r') as f:
+      right_loaded = f['right'][()]
+    left_all = left_loaded
+    right_all = right_loaded
+    N,H,W,C = left_all.shape
+
+  disp = []
+  depth = []
+
+  for i in range(0, N, args.batch_size):
+    img0 = left_all[i:i+args.batch_size]
+    img1 = right_all[i:i+args.batch_size]
     img0_ori = img0.copy()
-    logging.info(f"img0: {img0.shape}")  
+    logging.info(f"batch {i}, img: {img0.shape}")  
     img0 = torch.as_tensor(img0).cuda().float().permute(0,3,1,2)
-  img1 = torch.as_tensor(img1).cuda().float().permute(0,3,1,2)
+    img1 = torch.as_tensor(img1).cuda().float().permute(0,3,1,2)
 
-  padder = InputPadder(img0.shape, divis_by=32, force_square=False)
-  img0, img1 = padder.pad(img0, img1)
+    padder = InputPadder(img0.shape, divis_by=32, force_square=False)
+    img0, img1 = padder.pad(img0, img1)
 
-  with torch.cuda.amp.autocast(True):
-    if not args.hiera:
-      disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
-    else:
-      disp = model.run_hierachical(img0, img1, iters=args.valid_iters, test_mode=True, small_ratio=0.5)
+    with torch.cuda.amp.autocast(True):
+      if not args.hiera:
+        disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
+      else:
+        disp = model.run_hierachical(img0, img1, iters=args.valid_iters, test_mode=True, small_ratio=0.5)
   
-  print(disp.shape)
+      print(disp.shape)
+      disp = padder.unpad(disp.float())
+      print(disp.shape)
 
-  disp = padder.unpad(disp.float())
-  print(disp.shape)
+      print("\n")
+      # disparr = disp.data.cpu().numpy().reshape(disp.shape[0],H,W)
+      # vis = vis_disparityarr(disparr)
+      # # vis = np.concatenate([img0_ori, vis], axis=1)
+      # imageio.imwrite(f'{args.out_dir}/vis.png', vis)
+      # logging.info(f"Output saved to {args.out_dir}")
 
-  print("\n")
-  disparr = disp.data.cpu().numpy().reshape(disp.shape[0],H,W)
-  vis = vis_disparityarr(disparr)
-  # vis = np.concatenate([img0_ori, vis], axis=1)
-  imageio.imwrite(f'{args.out_dir}/vis.png', vis)
-  logging.info(f"Output saved to {args.out_dir}")
+      # if args.remove_invisible:
+      #   yy,xx = np.meshgrid(np.arange(disp.shape[0]), np.arange(disp.shape[1]), indexing='ij')
+      #   us_right = xx-disp
+      #   invalid = us_right<0
+      #   disp[invalid] = np.inf
 
-  # if args.remove_invisible:
-  #   yy,xx = np.meshgrid(np.arange(disp.shape[0]), np.arange(disp.shape[1]), indexing='ij')
-  #   us_right = xx-disp
-  #   invalid = us_right<0
-  #   disp[invalid] = np.inf
+      if args.get_depth:
+        depth = f_left*baseline/(disp+1e-6)
+        #np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
+      disp.append(disp.data.cpu().numpy())
+      depth.append(depth.data.cpu().numpy()) 
 
-  if args.get_depth:
-    
-    stereo_params = np.load(args.stereo_params_npy_file, allow_pickle=True)
-    
-    P1 = stereo_params['P1']
-    P1[:2] *= scale
-    f_left = P1[0,0]
-    baseline = stereo_params['baseline']
-    depth = f_left*baseline/(disp+1e-6)
-    np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
+  disp = np.concatenate(disp, axis=0).reshape(N,H,W).astype(np.float16)
+  depth = np.concatenate(depth, axis=0).reshape(N,H,W).astype(np.float16)
 
+  with h5py.File(f'{args.out_dir}/leftview_disp.h5', 'w') as f:
+    f.create_dataset('disp', data=disp, compression='gzip')
+    f.create_dataset('depth', data=depth, compression='gzip')
+
+  
   if args.get_pc:
     with open(args.intrinsic_file, 'r') as f:
       lines = f.readlines()
