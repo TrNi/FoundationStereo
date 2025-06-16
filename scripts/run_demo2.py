@@ -54,7 +54,7 @@ if __name__=="__main__":
   args = OmegaConf.create(cfg)
   logging.info(f"args:\n{args}")
   logging.info(f"Using pretrained model from {ckpt_dir}")
-  stereo_params = np.load(args.stereo_params_npy_file, allow_pickle=True)
+  stereo_params = np.load(args.stereo_params_npz_file, allow_pickle=True)
         
   P1 = stereo_params['P1']
   P1[:2] *= scale
