@@ -42,7 +42,7 @@ if __name__=="__main__":
   args = parser.parse_args()
 
   if not os.path.exists("dinov2_gh"):
-    clone_repo("https://github.com/facebookresearch/dinov2.git", "dinov2_gh")
+    subprocess.run(["git", "clone", "https://github.com/facebookresearch/dinov2.git", "dinov2_gh"], check=True)
 
   set_logging_format()
   set_seed(0)
