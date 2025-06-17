@@ -15,6 +15,7 @@ from core.utils.utils import InputPadder
 from Utils import *
 from core.foundation_stereo import *
 import h5py
+import subprocess
 
 if __name__=="__main__":
   code_dir = os.path.dirname(os.path.realpath(__file__))
@@ -39,6 +40,9 @@ if __name__=="__main__":
   parser.add_argument('--denoise_nb_points', type=int, default=30, help='number of points to consider for radius outlier removal')
   parser.add_argument('--denoise_radius', type=float, default=0.03, help='radius to use for outlier removal')
   args = parser.parse_args()
+
+  if not os.path.exists("dinov2_gh"):
+    clone_repo("https://github.com/facebookresearch/dinov2.git", "dinov2_gh")
 
   set_logging_format()
   set_seed(0)
@@ -70,7 +74,7 @@ if __name__=="__main__":
   model.cuda()
   model.eval()
 
-  code_dir = os.path.dirname(os.path.realpath(__file__))
+  
   # img0 = imageio.imread(args.left_file)
   # img1 = imageio.imread(args.right_file)
   # scale = args.scale
