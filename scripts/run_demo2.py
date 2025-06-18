@@ -41,8 +41,8 @@ if __name__=="__main__":
   parser.add_argument('--denoise_radius', type=float, default=0.03, help='radius to use for outlier removal')
   args = parser.parse_args()
 
-  if not os.path.exists(f'{code_dir}/dinov2_gh'):
-    subprocess.run(["git", "clone", "https://github.com/facebookresearch/dinov2.git", f'{code_dir}/dinov2_gh'], check=True)
+  if not os.path.exists(f'{code_dir}/../dinov2_gh'):
+    subprocess.run(["git", "clone", "https://github.com/facebookresearch/dinov2.git", f'{code_dir}/../dinov2_gh'], check=True)
 
   set_logging_format()
   set_seed(0)
