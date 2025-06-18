@@ -156,7 +156,7 @@ class DPT_DINOv2(nn.Module):
         # if localhub:
         #     self.pretrained = torch.hub.load('torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
         # else:
-        self.pretrained = self.pretrained = dinov2_vitl14_reg4_dinotxt_tet1280d20h24l(pretrained=pretrained_dino) # only works for vitl.
+        self.pretrained = self.pretrained = dinov2_vitl14_reg4_dinotxt_tet1280d20h24l() #pretrained=pretrained_dino) # only works for vitl.
         #torch.hub.load('facebookresearch/dinov2', 'dinov2_{:}14'.format(encoder), pretrained=pretrained_dino)
 
 
