@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from dinov2_gh.dinov2.hub.dinotxt import dinov2_vitl14_reg4_dinotxt_tet1280d20h24l
 from dinov2_gh.dinov2.models.vision_transformer import vit_small,vit_base,vit_large
 from depth_anything.blocks import FeatureFusionBlock, _make_scratch
-sys.path.append(f'{code_dir}/../dinov2_gh/')
+sys.path.insert(0,f'{code_dir}/../dinov2_gh/')
 
 def _make_fusion_block(features, use_bn, size = None):
     return FeatureFusionBlock(
