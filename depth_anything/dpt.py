@@ -12,8 +12,8 @@ project_root = os.path.dirname(code_dir)
 sys.path.insert(0, project_root)
 
 # Import from dinov2_gh with absolute path to avoid conflicts
-from dinov2_gh.dinov2.hub.dinotxt import dinov2_vitl14_reg4_dinotxt_tet1280d20h24l
-from dinov2_gh.dinov2.models.vision_transformer import vit_small, vit_base, vit_large
+from dinov2.hub.dinotxt import dinov2_vitl14_reg4_dinotxt_tet1280d20h24l
+from dinov2.models.vision_transformer import vit_small, vit_base, vit_large
 from depth_anything.blocks import FeatureFusionBlock, _make_scratch
 
 def _make_fusion_block(features, use_bn, size = None):

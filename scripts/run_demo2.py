@@ -44,11 +44,10 @@ if __name__=="__main__":
 
   if not os.path.exists(f'{code_dir}/../dinov2_gh'):
     subprocess.run(["git", "clone", "https://github.com/facebookresearch/dinov2.git", f'{code_dir}/../dinov2_gh'], check=True)
-    
-    if os.path.exists(f'{code_dir}/../dinov2'):      
-      shutil.rmtree(f'{code_dir}/../dinov2')
-    shutil.move(f'{code_dir}/../dinov2_gh/dinov2', f'{code_dir}/../')
-    #shutil.rmtree(f'{code_dir}/../dinov2_gh/dinov2')
+    if os.path.exists(f'{code_dir}/../dinov2_gh/dinov2'):
+      if os.path.exists(f'{code_dir}/../dinov2'):      
+        shutil.rmtree(f'{code_dir}/../dinov2')
+      shutil.move(f'{code_dir}/../dinov2_gh/dinov2', f'{code_dir}/../')
 
 
 
