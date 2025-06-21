@@ -12,7 +12,8 @@ project_root = os.path.dirname(code_dir)
 sys.path.insert(0, project_root)
 
 # Import from dinov2_gh with absolute path to avoid conflicts
-from dinov2.hub.dinotxt import dinov2_vitl14_reg4_dinotxt_tet1280d20h24l
+from dinov2.hub.backbones import dinov2_vitl14
+#dinotxt import dinov2_vitl14_reg4_dinotxt_tet1280d20h24l
 #from dinov2.models.vision_transformer import vit_small, vit_base, vit_large
 from depth_anything.blocks import FeatureFusionBlock, _make_scratch
 
@@ -163,11 +164,11 @@ class DPT_DINOv2(nn.Module):
         # if localhub:
         #     self.pretrained = torch.hub.load('torchhub/facebookresearch_dinov2_main', 'dinov2_{:}14'.format(encoder), source='local', pretrained=False)
         # else:
-        self.pretrained = dinov2_vitl14_reg4_dinotxt_tet1280d20h24l() #pretrained=pretrained_dino) # only works for vitl.
+        self.pretrained = dinov2_vitl14(pretrained=pretrained_dino) #_reg4_dinotxt_tet1280d20h24l() #pretrained=pretrained_dino) # only works for vitl.
         #torch.hub.load('facebookresearch/dinov2', 'dinov2_{:}14'.format(encoder), pretrained=pretrained_dino)
 
 
-        dim = 1024 #self.pretrained.blocks[0].attn.qkv.in_features
+        dim = self.pretrained.blocks[0].attn.qkv.in_features #1024 #
 
         self.depth_head = DPTHead(1, dim, features, use_bn, out_channels=out_channels, use_clstoken=use_clstoken)
 
