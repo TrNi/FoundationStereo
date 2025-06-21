@@ -108,8 +108,8 @@ if __name__=="__main__":
       right_all = right_all[None]
     N,H,W,C = left_all.shape
 
-  disp = []
-  depth = []
+  disp_all = []
+  depth_all = []
 
   for i in range(0, N, args.batch_size):
     img0 = left_all[i:i+args.batch_size]
@@ -148,15 +148,15 @@ if __name__=="__main__":
       if args.get_depth:
         depth = f_left*baseline/(disp+1e-6)
         #np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
-      disp.append(disp.data.cpu().numpy())
-      depth.append(depth.data.cpu().numpy()) 
+      disp_all.append(disp.data.cpu().numpy())
+      depth_all.append(depth.data.cpu().numpy()) 
 
-  disp = np.concatenate(disp, axis=0).reshape(N,H,W).astype(np.float16)
-  depth = np.concatenate(depth, axis=0).reshape(N,H,W).astype(np.float16)
+  disp_all = np.concatenate(disp_all, axis=0).reshape(N,H,W).astype(np.float16)
+  depth_all = np.concatenate(depth_all, axis=0).reshape(N,H,W).astype(np.float16)
 
   with h5py.File(f'{args.out_dir}/leftview_disp.h5', 'w') as f:
-    f.create_dataset('disp', data=disp, compression='gzip')
-    f.create_dataset('depth', data=depth, compression='gzip')
+    f.create_dataset('disp', data=disp_all, compression='gzip')
+    f.create_dataset('depth', data=depth_all, compression='gzip')
 
   
   if args.get_pc:
@@ -165,9 +165,9 @@ if __name__=="__main__":
       K = np.array(list(map(float, lines[0].rstrip().split()))).astype(np.float32).reshape(3,3)
       baseline = float(lines[1])
     K[:2] *= scale
-    depth = K[0,0]*baseline/disp
+    depth = K[0,0]*baseline/disp_all
     np.save(f'{args.out_dir}/depth_meter.npy', depth)
-    xyz_map = depth2xyzmap(depth, K)
+    xyz_map = depth2xyzmap(depth_all, K)
     pcd = toOpen3dCloud(xyz_map.reshape(-1,3), img0_ori.reshape(-1,3))
     keep_mask = (np.asarray(pcd.points)[:,2]>0) & (np.asarray(pcd.points)[:,2]<=args.z_far)
     keep_ids = np.arange(len(np.asarray(pcd.points)))[keep_mask]
