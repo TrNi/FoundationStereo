@@ -6,3 +6,9 @@ __pycache__
 DATA/*
 **/desktop.ini
 refs/desktop.ini
+**/desktop.ini
+*/desktop.ini
+***/desktop.ini
+****/desktop.ini
+*****/desktop.ini
+*****/desktop.ini
