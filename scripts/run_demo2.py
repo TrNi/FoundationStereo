@@ -103,8 +103,10 @@ if __name__=="__main__":
     left_all = left_loaded
     right_all = right_loaded
     print(left_all.shape, right_all.shape)
-    N=1
-    H,W,C = left_all.shape
+    if left_all.ndim==3:
+      left_all = left_all[None]
+      right_all = right_all[None]
+    N,H,W,C = left_all.shape
 
   disp = []
   depth = []
