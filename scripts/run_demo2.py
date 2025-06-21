@@ -102,7 +102,9 @@ if __name__=="__main__":
       right_loaded = f['right'][()]
     left_all = left_loaded
     right_all = right_loaded
-    N,H,W,C = left_all.shape
+    print(left_all.shape, right_all.shape)
+    N=1
+    H,W,C = left_all.shape
 
   disp = []
   depth = []
