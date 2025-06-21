@@ -16,6 +16,7 @@ from Utils import *
 from core.foundation_stereo import *
 import h5py
 import subprocess
+import shutil
 
 if __name__=="__main__":
   code_dir = os.path.dirname(os.path.realpath(__file__))
@@ -43,6 +44,13 @@ if __name__=="__main__":
 
   if not os.path.exists(f'{code_dir}/../dinov2_gh'):
     subprocess.run(["git", "clone", "https://github.com/facebookresearch/dinov2.git", f'{code_dir}/../dinov2_gh'], check=True)
+    
+    if os.path.exists(f'{code_dir}/../dinov2'):      
+      shutil.rmtree(f'{code_dir}/../dinov2')
+      shutil.move(f'{code_dir}/../dinov2_gh/dinov2', f'{code_dir}/../')
+      shutil.rmtree(f'{code_dir}/../dinov2_gh/dinov2')
+
+
 
   set_logging_format()
   set_seed(0)
