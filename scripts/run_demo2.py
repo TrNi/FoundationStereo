@@ -47,8 +47,8 @@ if __name__=="__main__":
     
     if os.path.exists(f'{code_dir}/../dinov2'):      
       shutil.rmtree(f'{code_dir}/../dinov2')
-      shutil.move(f'{code_dir}/../dinov2_gh/dinov2', f'{code_dir}/../')
-      shutil.rmtree(f'{code_dir}/../dinov2_gh/dinov2')
+    shutil.move(f'{code_dir}/../dinov2_gh/dinov2', f'{code_dir}/../')
+    shutil.rmtree(f'{code_dir}/../dinov2_gh/dinov2')
 
 
 
