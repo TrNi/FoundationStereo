@@ -21,7 +21,7 @@ import shutil
 if __name__=="__main__":
   code_dir = os.path.dirname(os.path.realpath(__file__))
   parser = argparse.ArgumentParser()
-  parser.add_argument('--batch_size', default=1, type=int)
+  parser.add_argument('--batch_size', default=5, type=int)
   parser.add_argument('--left_file', default=f'{code_dir}/../assets/left.png', type=str)
   parser.add_argument('--right_file', default=f'{code_dir}/../assets/right.png', type=str)
   parser.add_argument('--left_h5_file', default="", type=str)
