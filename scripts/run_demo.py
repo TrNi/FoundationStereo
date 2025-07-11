@@ -75,7 +75,7 @@ if __name__=="__main__":
   padder = InputPadder(img0.shape, divis_by=32, force_square=False)
   img0, img1 = padder.pad(img0, img1)
 
-  with torch.cuda.amp.autocast(True):
+  with torch.amp.autocast("cuda",True):
     if not args.hiera:
       disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
     else:

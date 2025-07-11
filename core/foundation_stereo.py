@@ -23,7 +23,7 @@ import time,huggingface_hub
 
 
 try:
-    autocast = torch.cuda.amp.autocast
+    autocast = torch.amp.autocast
 except:
     class autocast:
         def __init__(self, enabled):

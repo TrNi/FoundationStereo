@@ -84,30 +84,6 @@ if __name__=="__main__":
   P1[:2] *= args.scale
   f_left = P1[0,0]
   baseline = stereo_params['baseline']
-
-  model = FoundationStereo(args)
-
-  ckpt = torch.load(ckpt_dir)
-  logging.info(f"ckpt global_step:{ckpt['global_step']}, epoch:{ckpt['epoch']}")
-  model.load_state_dict(ckpt['model'])
-
-  model.cuda()
-  model.eval()
-
-  
-  # img0 = imageio.imread(args.left_file)
-  # img1 = imageio.imread(args.right_file)
-  # scale = args.scale
-  # assert scale<=1, "scale must be <=1"
-  # img0 = cv2.resize(img0, fx=scale, fy=scale, dsize=None)
-  # img1 = cv2.resize(img1, fx=scale, fy=scale, dsize=None)
-  # H,W = img0.shape[:2]
-  # img0_ori = img0.copy()
-  # logging.info(f"img0: {img0.shape}")
-  # img0 = torch.as_tensor(img0).cuda().float()[None].permute(0,3,1,2)
-  # img1 = torch.as_tensor(img1).cuda().float()[None].permute(0,3,1,2)
-
-
   if left_h5_file and right_h5_file:
     try:
       with h5py.File(left_h5_file, 'r') as f:
@@ -125,8 +101,20 @@ if __name__=="__main__":
     if left_all.ndim==3:
       left_all = left_all[None]
       right_all = right_all[None]
-    N,H,W,C = left_all.shape
-    resize_factor = 1.5
+  N,C,H,W = left_all.shape
+  resize_factor = 1.5
+
+  cfg["max_disp"] = max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"])
+  args.max_disp = cfg["max_disp"]
+
+  model = FoundationStereo(args)
+
+  ckpt = torch.load(ckpt_dir)
+  logging.info(f"ckpt global_step:{ckpt['global_step']}, epoch:{ckpt['epoch']}")
+  model.load_state_dict(ckpt['model'])
+
+  model.cuda()
+  model.eval()
 
   disp_all = []
   depth_all = []
@@ -148,13 +136,13 @@ if __name__=="__main__":
     img0 = resize_batch(img0, round(H/resize_factor) ,round(W/resize_factor))
     img1 = resize_batch(img1, round(H/resize_factor), round(W/resize_factor))
     logging.info(f"batch {i}, img: {img0.shape}")  
-    img0 = torch.as_tensor(img0).cuda().float().permute(0,3,1,2)
-    img1 = torch.as_tensor(img1).cuda().float().permute(0,3,1,2)
+    img0 = torch.as_tensor(img0).cuda().float()
+    img1 = torch.as_tensor(img1).cuda().float()
 
     padder = InputPadder(img0.shape, divis_by=32, force_square=False)
     img0, img1 = padder.pad(img0, img1)
 
-    with torch.cuda.amp.autocast(True):
+    with torch.amp.autocast("cuda",True):
       if not args.hiera:
         disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
       else:
