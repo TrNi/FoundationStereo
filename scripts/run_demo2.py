@@ -55,6 +55,7 @@ if __name__=="__main__":
   parser.add_argument('--denoise_cloud', type=int, default=1, help='whether to denoise the point cloud')
   parser.add_argument('--denoise_nb_points', type=int, default=30, help='number of points to consider for radius outlier removal')
   parser.add_argument('--denoise_radius', type=float, default=0.03, help='radius to use for outlier removal')
+  parser.add_argument("--process_only",default=None,type=int)
   args = parser.parse_args()
 
   if not os.path.exists(f'{code_dir}/../dinov2_gh'):
@@ -104,6 +105,10 @@ if __name__=="__main__":
       left_all = left_all[None]
       right_all = right_all[None]
   N,C,H,W = left_all.shape
+  if args.process_only:
+    N_stop = args.process_only
+  else:
+    N_stop = N
   resize_factor = 1.5
 
   cfg["max_disp"] = max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"])
@@ -172,6 +177,8 @@ if __name__=="__main__":
         #np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
       disp_all.append(disp.data.cpu().numpy())
       depth_all.append(depth.data.cpu().numpy()) 
+      if i+batch_size >= N_stop:
+        break
 
   disp_all = np.concatenate(disp_all, axis=0).reshape(N,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
   depth_all = np.concatenate(depth_all, axis=0).reshape(N,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
