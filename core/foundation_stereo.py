@@ -116,6 +116,7 @@ class hourglass(nn.Module):
         conv = self.conv1_up(conv1)
         x = self.conv_patch(x)
         x = self.atts["4"](x)
+        print(x.shape)
         x = F.interpolate(x, scale_factor=4, mode='trilinear', align_corners=False)
         conv = conv + x
         conv = self.conv_out(conv)

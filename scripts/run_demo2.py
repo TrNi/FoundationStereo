@@ -145,12 +145,13 @@ if __name__=="__main__":
 
     img0 = resize_batch(img0, round(H/resize_factor) ,round(W/resize_factor))
     img1 = resize_batch(img1, round(H/resize_factor), round(W/resize_factor))
-    logging.info(f"batch {i}, img: {img0.shape}")  
+    
     img0 = torch.as_tensor(img0).cuda().float()
     img1 = torch.as_tensor(img1).cuda().float()
 
     padder = InputPadder(img0.shape, divis_by=32, force_square=False)
     img0, img1 = padder.pad(img0, img1)
+    logging.info(f"batch {i}, img: {img0.shape}")  
 
     with torch.amp.autocast("cuda",enabled=True):
       if not args.hiera:
