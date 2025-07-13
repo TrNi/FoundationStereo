@@ -109,6 +109,7 @@ if __name__=="__main__":
     N_stop = args.process_only
   else:
     N_stop = N
+  N_max = N_stop
   resize_factor = 1.5
   print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
   cfg["max_disp"] = (np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]).astype(int)
@@ -178,10 +179,11 @@ if __name__=="__main__":
       disp_all.append(disp.data.cpu().numpy())
       depth_all.append(depth.data.cpu().numpy()) 
       if i+args.batch_size >= N_stop:
+        N_max = i + img0.shape[0]
         break
 
-  disp_all = np.concatenate(disp_all, axis=0).reshape(N,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
-  depth_all = np.concatenate(depth_all, axis=0).reshape(N,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
+  disp_all = np.concatenate(disp_all, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
+  depth_all = np.concatenate(depth_all, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
 
   with h5py.File(f'{args.out_dir}/leftview_disp_depth.h5', 'w') as f:
     f.create_dataset('disp', data=disp_all, compression='gzip')
