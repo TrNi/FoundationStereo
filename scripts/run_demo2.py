@@ -112,7 +112,7 @@ if __name__=="__main__":
   N_max = N_stop
   resize_factor = 1.5
   print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
-  cfg["max_disp"] = (np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]).astype(int)
+  cfg["max_disp"] = np.ceil(W/resize_factor/4).astype(int).astype(int)
   args.max_disp = cfg["max_disp"]
 
   model = FoundationStereo(args)
