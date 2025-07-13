@@ -56,6 +56,7 @@ if __name__=="__main__":
   parser.add_argument('--denoise_nb_points', type=int, default=30, help='number of points to consider for radius outlier removal')
   parser.add_argument('--denoise_radius', type=float, default=0.03, help='radius to use for outlier removal')
   parser.add_argument("--process_only",default=None,type=int)
+  parser.add_argument("--max_disp",default=192,type=int)
   args = parser.parse_args()
 
   if not os.path.exists(f'{code_dir}/../dinov2_gh'):
@@ -112,7 +113,7 @@ if __name__=="__main__":
   N_max = N_stop
   resize_factor = 1.5
   #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
-  args.max_disp = np.ceil(W/resize_factor/4).astype(int).astype(int)
+  args.max_disp = np.ceil(W/resize_factor/4).astype(int)
   max_disp = args.max_disp
 
   model = FoundationStereo(args)
