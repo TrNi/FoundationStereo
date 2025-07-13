@@ -182,7 +182,7 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
 
     def upsample_disp(self, disp, mask_feat_4, stem_2x):
 
-        with autocast("cuda",nabled=self.args.mixed_precision):
+        with autocast("cuda",enabled=self.args.mixed_precision):
             xspx = self.spx_2_gru(mask_feat_4, stem_2x)   # 1/2 resolution
             spx_pred = self.spx_gru(xspx)
             spx_pred = F.softmax(spx_pred, 1)
