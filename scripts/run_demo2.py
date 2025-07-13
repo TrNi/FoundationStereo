@@ -177,7 +177,7 @@ if __name__=="__main__":
         #np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
       disp_all.append(disp.data.cpu().numpy())
       depth_all.append(depth.data.cpu().numpy()) 
-      if i+batch_size >= N_stop:
+      if i+args.batch_size >= N_stop:
         break
 
   disp_all = np.concatenate(disp_all, axis=0).reshape(N,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
