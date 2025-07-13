@@ -113,7 +113,7 @@ if __name__=="__main__":
   N_max = N_stop
   resize_factor = 1.5
   #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
-  args.max_disp = int(np.ceil(W/resize_factor/4/64/3)*64*3)
+  args.max_disp = int(np.floor(W/resize_factor/4/128/3)*128*3)
   #np.ceil(W/resize_factor/4).astype(int)
   max_disp = args.max_disp
 
