@@ -118,7 +118,7 @@ if __name__=="__main__":
   large_dim = max(H,W)
   resize_factor = max(round(small_dim/1586,1), round(large_dim/2379,1))
   # resize_factor = 1.5
-  print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {out_dir}.")
+  print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
   #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
   args.max_disp = 192 #int(np.floor(W/resize_factor/4/128/3)*128*3)
   #np.ceil(W/resize_factor/4).astype(int)
