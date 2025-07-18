@@ -116,7 +116,7 @@ if __name__=="__main__":
   # with resize_factor of 2.3 at 28s/image, up to ~25 images.
   small_dim = min(H,W)
   large_dim = max(H,W)
-  resize_factor = max(round(small_dim/1586,1), round(large_dim/2379,1))
+  resize_factor = 1 #max(round(small_dim/1586,1), round(large_dim/2379,1))
   # resize_factor = 1.5
   print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
   #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
