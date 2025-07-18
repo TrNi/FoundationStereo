@@ -111,12 +111,19 @@ if __name__=="__main__":
   else:
     N_stop = N
   N_max = N_stop
-  resize_factor = 1.5
+  # aspect ratio for Canon EOS 6D is 3/2. 3648
+  # image size of about 1586x2379 works with batch_size of 1, 
+  # with resize_factor of 2.3 at 28s/image, up to ~25 images.
+  small_dim = min(H,W)
+  large_dim = max(H,W)
+  resize_factor = max(round(small_dim/1586,1), round(large_dim/2379,1))
+  # resize_factor = 1.5
+  print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {out_dir}.")
   #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
   args.max_disp = 192 #int(np.floor(W/resize_factor/4/128/3)*128*3)
   #np.ceil(W/resize_factor/4).astype(int)
   max_disp = args.max_disp
-
+  print("args.max_disp", args.max_disp)
   model = FoundationStereo(args)
 
   ckpt = torch.load(ckpt_dir)
