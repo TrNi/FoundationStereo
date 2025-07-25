@@ -116,12 +116,12 @@ class hourglass(nn.Module):
         conv = self.conv1_up(conv1)
         x = self.conv_patch(x)
         x = self.atts["4"](x)
-        print("x",x.shape)
+        # print("x",x.shape)
         x = F.interpolate(x, scale_factor=4, mode='trilinear', align_corners=False)
-        print("x",x.shape, "conv", conv.shape)
+        # print("x",x.shape, "conv", conv.shape)
         conv = conv + x
         conv = self.conv_out(conv)
-        print("conv",conv.shape)
+        # print("conv",conv.shape)
 
         return conv
 
@@ -210,15 +210,15 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
             gwc_volume = build_gwc_volume(features_left[0], features_right[0], self.args.max_disp//4, self.cv_group)  # Group-wise correlation volume (B, N_group, max_disp, H, W)
             left_tmp = self.proj_cmb(features_left[0])
             right_tmp = self.proj_cmb(features_right[0])
-            print(left_tmp.shape,right_tmp.shape)
+            # print(left_tmp.shape,right_tmp.shape)
             concat_volume = build_concat_volume(left_tmp, right_tmp, maxdisp=self.args.max_disp//4)
             del left_tmp, right_tmp
             comb_volume = torch.cat([gwc_volume, concat_volume], dim=1)
             comb_volume = self.corr_stem(comb_volume)
             comb_volume = self.corr_feature_att(comb_volume, features_left[0])
-            print("comb_volume",comb_volume.shape)
+            # print("comb_volume",comb_volume.shape)
             comb_volume = self.cost_agg(comb_volume, features_left)
-            print("comb_volume",comb_volume.shape)
+            # print("comb_volume",comb_volume.shape)
 
             # Init disp from geometry encoding volume
             prob = F.softmax(self.classifier(comb_volume).squeeze(1), dim=1)  #(B, max_disp, H, W)

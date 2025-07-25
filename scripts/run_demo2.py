@@ -18,7 +18,7 @@ import h5py
 import subprocess
 import shutil
 import cv2
-
+from tqdm import tqdm
 
 def resize_image(img_chw, target_h, target_w, interpolation=cv2.INTER_LINEAR):
     # img_chw: C x H x W numpy array    
@@ -116,7 +116,9 @@ if __name__=="__main__":
   # with resize_factor of 2.3 at 28s/image, up to ~25 images.
   small_dim = min(H,W)
   large_dim = max(H,W)
-  resize_factor = 1.5 #max(round(small_dim/1586,1), round(large_dim/2379,1))
+  resize_factor = 1.6 #a larger image size on a GPU with limited memory may throw cuDNN tensor not supported errors.
+  # cuDNN error: CUDNN_STATUS_NOT_SUPPORTED --> solved by reducing size or increasing GPU RAM.
+  # max(round(small_dim/1586,1), round(large_dim/2379,1))
   # resize_factor = 1.5
   print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
   #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
@@ -135,8 +137,8 @@ if __name__=="__main__":
 
   disp_all = []
   depth_all = []
-
-  for i in range(0, N, args.batch_size):
+  
+  for i in tqdm(range(0, N, args.batch_size), desc="Processing batches"):            
     img0 = left_all[i:i+args.batch_size]
     img1 = right_all[i:i+args.batch_size]
     img0_ori = img0.copy()
