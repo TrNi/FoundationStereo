@@ -150,7 +150,7 @@ if __name__=="__main__":
   max_disp = args.max_disp
   print("args.max_disp", args.max_disp)
   model = FoundationStereo(args)
-  ckpt = torch.load(ckpt_dir)
+  ckpt = torch.load(ckpt_dir, weights_only=False)
   logging.info(f"ckpt global_step:{ckpt['global_step']}, epoch:{ckpt['epoch']}")
   model.load_state_dict(ckpt['model'])
   model.cuda()
@@ -202,7 +202,7 @@ if __name__=="__main__":
           large_dim = max(H,W)
           resize_factor = 3 # max(round(small_dim/1586,1), round(large_dim/2379,1))
           # resize_factor = 1.5
-          print(f"Found {N} images in this chunk,  applying resize_factor {resize_factor} Saving files to {out_dir}.")
+          print(f"Found {N} images in this chunk,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
           
           disp_chunk = []
           depth_chunk = []
