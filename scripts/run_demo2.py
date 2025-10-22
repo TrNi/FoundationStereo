@@ -162,151 +162,151 @@ if __name__=="__main__":
   f_left = P1[0,0]
   baseline = stereo_params['baseline']
   prev_start_idx = 0
-    if args.left_h5_file and args.right_h5_file:
-        start_idx = 0
-        chunk_size = 5
-        while True:
-            prev_start_idx = start_idx
-            left_chunk, actual_left_size = read_h5_chunk(args.left_h5_file, 'rectified_lefts', start_idx, chunk_size)
-            right_chunk, actual_right_size = read_h5_chunk(args.right_h5_file, 'rectified_rights', start_idx, chunk_size)
-            assert actual_left_size == actual_right_size, f"left and right HDF5 chunks have different sizes: {actual_left_size} vs {actual_right_size}"
-            if actual_left_size == 0:
-                break
-            start_idx += actual_left_size
-            # try:
-            #     with h5py.File(args.left_h5_file, 'r') as f:
-            #         left_all = f['data'][()]   # or np.array(f['left'])
-            #     with h5py.File(args.right_h5_file, 'r') as f:
-            #         right_all = f['data'][()]
-            # except Exception as e:            
-            #     with h5py.File(args.left_h5_file, 'r') as f:
-            #         left_all = f['left'][()]   # or np.array(f['left'])
-            #     with h5py.File(args.right_h5_file, 'r') as f:
-            #         right_all = f['right'][()]      
-            print(left_chunk.shape, right_chunk.shape)
-    
-            if left_chunk.ndim==3:
-                left_chunk = left_chunk[None]
-                right_chunk = right_chunk[None]
-            
-            N,C,H,W = left_chunk.shape
-            if args.process_only:
-                N_stop = args.process_only
-            else:
-                N_stop = N
-            N_max = N_stop
-            # aspect ratio for Canon EOS 6D is 3/2. 3648
-            # image size of about 1586x2379 works with batch_size of 1, 
-            # with resize_factor of 2.3 at 28s/image, up to ~25 images.
-            small_dim = min(H,W)
-            large_dim = max(H,W)
-            resize_factor = 3 # max(round(small_dim/1586,1), round(large_dim/2379,1))
-            # resize_factor = 1.5
-            print(f"Found {N} images in this chunk,  applying resize_factor {resize_factor} Saving files to {out_dir}.")
-            
-            disp_chunk = []
-            depth_chunk = []
-            # if args.left_h5_file and args.right_h5_file:
-            #   try:
-            #     with h5py.File(args.left_h5_file, 'r') as f:
-            #       left_all = f['data'][()]   # or np.array(f['left'])
-            #     with h5py.File(args.right_h5_file, 'r') as f:
-            #       right_all = f['data'][()]
-            #   except Exception as e:            
-            #     with h5py.File(args.left_h5_file, 'r') as f:
-            #       left_all = f['left'][()]   # or np.array(f['left'])
-            #     with h5py.File(args.right_h5_file, 'r') as f:
-            #       right_all = f['right'][()]
-                
-            #   print(left_all.shape, right_all.shape)
-
-            #   if left_all.ndim==3:
-            #     left_all = left_all[None]
-            #     right_all = right_all[None]
-            # N,C,H,W = left_all.shape
-            # if args.process_only:
-            #   N_stop = args.process_only
-            # else:
-            #   N_stop = N
-            # N_max = N_stop
-            # # aspect ratio for Canon EOS 6D is 3/2. 3648
-            # # image size of about 1586x2379 works with batch_size of 1, 
-            # # with resize_factor of 2.3 at 28s/image, up to ~25 images.
-            # small_dim = min(H,W)
-            # large_dim = max(H,W)
-            # resize_factor = 3 #a larger image size on a GPU with limited memory may throw cuDNN tensor not supported errors.
-            # # cuDNN error: CUDNN_STATUS_NOT_SUPPORTED --> solved by reducing size or increasing GPU RAM.
-            # # max(round(small_dim/1586,1), round(large_dim/2379,1))
-            # # resize_factor = 1.5
-            # print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
-            # #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
-            
-            # disp_all = []
-            # depth_all = []
-            with torch.no_grad():
-              for i in tqdm(range(0, N, args.batch_size), desc="Processing batches"):            
-                img0 = left_chunk[i:i+args.batch_size]
-                img1 = right_chunk[i:i+args.batch_size]
-                img0_ori = img0.copy()
-
-                if len(img0.shape)==3:
-                  img0 = img0[None,...]
-
-                if len(img1.shape)==3:
-                  img1 = img1[None,...]
-
-                # image size of about 1500x2300 works with batch_size of 1, 
-                # with resize_factor of 1.5 at 28s/image, up to ~25 images.
-
-                img0 = resize_batch(img0, round(H/resize_factor) ,round(W/resize_factor))
-                img1 = resize_batch(img1, round(H/resize_factor), round(W/resize_factor))
-                
-                img0 = torch.as_tensor(img0).cuda().float()
-                img1 = torch.as_tensor(img1).cuda().float()
-
-                padder = InputPadder(img0.shape, divis_by=32, force_square=False)
-                img0, img1 = padder.pad(img0, img1)
-                logging.info(f"batch {i}, img: {img0.shape}")  
-
-                with torch.amp.autocast("cuda",enabled=True):
-                  if not args.hiera:
-                    disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
-                  else:
-                    disp = model.run_hierachical(img0, img1, iters=args.valid_iters, test_mode=True, small_ratio=0.5)
+  if args.left_h5_file and args.right_h5_file:
+      start_idx = 0
+      chunk_size = 5
+      while True:
+          prev_start_idx = start_idx
+          left_chunk, actual_left_size = read_h5_chunk(args.left_h5_file, 'rectified_lefts', start_idx, chunk_size)
+          right_chunk, actual_right_size = read_h5_chunk(args.right_h5_file, 'rectified_rights', start_idx, chunk_size)
+          assert actual_left_size == actual_right_size, f"left and right HDF5 chunks have different sizes: {actual_left_size} vs {actual_right_size}"
+          if actual_left_size == 0:
+              break
+          start_idx += actual_left_size
+          # try:
+          #     with h5py.File(args.left_h5_file, 'r') as f:
+          #         left_all = f['data'][()]   # or np.array(f['left'])
+          #     with h5py.File(args.right_h5_file, 'r') as f:
+          #         right_all = f['data'][()]
+          # except Exception as e:            
+          #     with h5py.File(args.left_h5_file, 'r') as f:
+          #         left_all = f['left'][()]   # or np.array(f['left'])
+          #     with h5py.File(args.right_h5_file, 'r') as f:
+          #         right_all = f['right'][()]      
+          print(left_chunk.shape, right_chunk.shape)
+  
+          if left_chunk.ndim==3:
+              left_chunk = left_chunk[None]
+              right_chunk = right_chunk[None]
+          
+          N,C,H,W = left_chunk.shape
+          if args.process_only:
+              N_stop = args.process_only
+          else:
+              N_stop = N
+          N_max = N_stop
+          # aspect ratio for Canon EOS 6D is 3/2. 3648
+          # image size of about 1586x2379 works with batch_size of 1, 
+          # with resize_factor of 2.3 at 28s/image, up to ~25 images.
+          small_dim = min(H,W)
+          large_dim = max(H,W)
+          resize_factor = 3 # max(round(small_dim/1586,1), round(large_dim/2379,1))
+          # resize_factor = 1.5
+          print(f"Found {N} images in this chunk,  applying resize_factor {resize_factor} Saving files to {out_dir}.")
+          
+          disp_chunk = []
+          depth_chunk = []
+          # if args.left_h5_file and args.right_h5_file:
+          #   try:
+          #     with h5py.File(args.left_h5_file, 'r') as f:
+          #       left_all = f['data'][()]   # or np.array(f['left'])
+          #     with h5py.File(args.right_h5_file, 'r') as f:
+          #       right_all = f['data'][()]
+          #   except Exception as e:            
+          #     with h5py.File(args.left_h5_file, 'r') as f:
+          #       left_all = f['left'][()]   # or np.array(f['left'])
+          #     with h5py.File(args.right_h5_file, 'r') as f:
+          #       right_all = f['right'][()]
               
-                  print(disp.shape)
-                  disp = padder.unpad(disp.float())
-                  print(disp.shape)
+          #   print(left_all.shape, right_all.shape)
 
-                  print("\n")
-                  # disparr = disp.data.cpu().numpy().reshape(disp.shape[0],H,W)
-                  # vis = vis_disparityarr(disparr)
-                  # # vis = np.concatenate([img0_ori, vis], axis=1)
-                  # imageio.imwrite(f'{args.out_dir}/vis.png', vis)
-                  # logging.info(f"Output saved to {args.out_dir}")
+          #   if left_all.ndim==3:
+          #     left_all = left_all[None]
+          #     right_all = right_all[None]
+          # N,C,H,W = left_all.shape
+          # if args.process_only:
+          #   N_stop = args.process_only
+          # else:
+          #   N_stop = N
+          # N_max = N_stop
+          # # aspect ratio for Canon EOS 6D is 3/2. 3648
+          # # image size of about 1586x2379 works with batch_size of 1, 
+          # # with resize_factor of 2.3 at 28s/image, up to ~25 images.
+          # small_dim = min(H,W)
+          # large_dim = max(H,W)
+          # resize_factor = 3 #a larger image size on a GPU with limited memory may throw cuDNN tensor not supported errors.
+          # # cuDNN error: CUDNN_STATUS_NOT_SUPPORTED --> solved by reducing size or increasing GPU RAM.
+          # # max(round(small_dim/1586,1), round(large_dim/2379,1))
+          # # resize_factor = 1.5
+          # print(f"Found {N} images,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
+          # #print(max(np.ceil(W/resize_factor/4).astype(int), cfg["max_disp"]))
+          
+          # disp_all = []
+          # depth_all = []
+          with torch.no_grad():
+            for i in tqdm(range(0, N, args.batch_size), desc="Processing batches"):            
+              img0 = left_chunk[i:i+args.batch_size]
+              img1 = right_chunk[i:i+args.batch_size]
+              img0_ori = img0.copy()
 
-                  # if args.remove_invisible:
-                  #   yy,xx = np.meshgrid(np.arange(disp.shape[0]), np.arange(disp.shape[1]), indexing='ij')
-                  #   us_right = xx-disp
-                  #   invalid = us_right<0
-                  #   disp[invalid] = np.inf
+              if len(img0.shape)==3:
+                img0 = img0[None,...]
 
-                  if args.get_depth:
-                    depth = f_left*baseline/(disp+1e-6)
-                    #np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
-                  disp_chunk.append(disp.data.cpu().numpy())
-                  depth_chunk.append(depth.data.cpu().numpy()) 
-                  if i+args.batch_size >= N_stop:
-                    N_max = i + img0.shape[0]
-                    break
+              if len(img1.shape)==3:
+                img1 = img1[None,...]
 
-              disp_chunk = np.concatenate(disp_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
-              depth_chunk = np.concatenate(depth_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
-              write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'disp', disp_chunk, prev_start_idx, shape=(N_max,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
-              write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'depth', depth_chunk, prev_start_idx, shape=(N_max,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
-              # with h5py.File(f'{args.out_dir}/leftview_disp_depth.h5', 'w') as f:
-              #   f.create_dataset('disp', data=disp_chunk, compression='gzip')
-              #   f.create_dataset('depth', data=depth_chunk, compression='gzip')
+              # image size of about 1500x2300 works with batch_size of 1, 
+              # with resize_factor of 1.5 at 28s/image, up to ~25 images.
+
+              img0 = resize_batch(img0, round(H/resize_factor) ,round(W/resize_factor))
+              img1 = resize_batch(img1, round(H/resize_factor), round(W/resize_factor))
+              
+              img0 = torch.as_tensor(img0).cuda().float()
+              img1 = torch.as_tensor(img1).cuda().float()
+
+              padder = InputPadder(img0.shape, divis_by=32, force_square=False)
+              img0, img1 = padder.pad(img0, img1)
+              logging.info(f"batch {i}, img: {img0.shape}")  
+
+              with torch.amp.autocast("cuda",enabled=True):
+                if not args.hiera:
+                  disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True)
+                else:
+                  disp = model.run_hierachical(img0, img1, iters=args.valid_iters, test_mode=True, small_ratio=0.5)
+            
+                print(disp.shape)
+                disp = padder.unpad(disp.float())
+                print(disp.shape)
+
+                print("\n")
+                # disparr = disp.data.cpu().numpy().reshape(disp.shape[0],H,W)
+                # vis = vis_disparityarr(disparr)
+                # # vis = np.concatenate([img0_ori, vis], axis=1)
+                # imageio.imwrite(f'{args.out_dir}/vis.png', vis)
+                # logging.info(f"Output saved to {args.out_dir}")
+
+                # if args.remove_invisible:
+                #   yy,xx = np.meshgrid(np.arange(disp.shape[0]), np.arange(disp.shape[1]), indexing='ij')
+                #   us_right = xx-disp
+                #   invalid = us_right<0
+                #   disp[invalid] = np.inf
+
+                if args.get_depth:
+                  depth = f_left*baseline/(disp+1e-6)
+                  #np.save(f'{args.out_dir}/leftview_depth_meter.npy', depth)
+                disp_chunk.append(disp.data.cpu().numpy())
+                depth_chunk.append(depth.data.cpu().numpy()) 
+                if i+args.batch_size >= N_stop:
+                  N_max = i + img0.shape[0]
+                  break
+
+            disp_chunk = np.concatenate(disp_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
+            depth_chunk = np.concatenate(depth_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
+            write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'disp', disp_chunk, prev_start_idx, shape=(N_max,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
+            write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'depth', depth_chunk, prev_start_idx, shape=(N_max,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
+            # with h5py.File(f'{args.out_dir}/leftview_disp_depth.h5', 'w') as f:
+            #   f.create_dataset('disp', data=disp_chunk, compression='gzip')
+            #   f.create_dataset('depth', data=depth_chunk, compression='gzip')
               
 
   
