@@ -164,7 +164,7 @@ if __name__=="__main__":
   prev_start_idx = 0
   if args.left_h5_file and args.right_h5_file:
       start_idx = 0
-      chunk_size = 5
+      chunk_size = 12
       while True:
           prev_start_idx = start_idx
           left_chunk, actual_left_size, full_size_left = read_h5_chunk(args.left_h5_file, 'rectified_lefts', start_idx, chunk_size)
@@ -201,7 +201,7 @@ if __name__=="__main__":
           # with resize_factor of 2.3 at 28s/image, up to ~25 images.
           small_dim = min(H,W)
           large_dim = max(H,W)
-          resize_factor = 3 # max(round(small_dim/1586,1), round(large_dim/2379,1))
+          resize_factor = 2.75 # max(round(small_dim/1586,1), round(large_dim/2379,1))
           # resize_factor = 1.5
           print(f"Found {N} images in this chunk,  applying resize_factor {resize_factor} Saving files to {args.out_dir}.")
           
@@ -300,14 +300,16 @@ if __name__=="__main__":
                 if i+args.batch_size >= N_stop:
                   N_max = i + img0.shape[0]
                   break
-
-            disp_chunk = np.concatenate(disp_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
-            depth_chunk = np.concatenate(depth_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
-            write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'disp', disp_chunk, prev_start_idx, shape=(full_size,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
-            write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'depth', depth_chunk, prev_start_idx, shape=(full_size,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
-            # with h5py.File(f'{args.out_dir}/leftview_disp_depth.h5', 'w') as f:
-            #   f.create_dataset('disp', data=disp_chunk, compression='gzip')
-            #   f.create_dataset('depth', data=depth_chunk, compression='gzip')
+            
+            with h5py.File(f'{args.out_dir}/leftview_disp_depth.h5', 'w') as f:
+            with h5py.File(f'{args.out_dir}/leftview_disp_depth.h5', 'w') as f:
+              f.create_dataset('disp', data=np.concatenate(disp_chunk, axis=0), compression='gzip')
+              f.create_dataset('depth', data=np.concatenate(depth_chunk, axis=0), compression='gzip')               
+                
+            #disp_chunk = np.concatenate(disp_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
+            #depth_chunk = np.concatenate(depth_chunk, axis=0).reshape(N_max,round(H/resize_factor),round(W/resize_factor)).astype(np.float16)
+            #write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'disp', disp_chunk, prev_start_idx, shape=(full_size,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)
+            #write_h5_chunk(f'{args.out_dir}/leftview_disp_depth.h5', 'depth', depth_chunk, prev_start_idx, shape=(full_size,round(H/resize_factor),round(W/resize_factor)),dtype=np.float16)          
               
 
   
